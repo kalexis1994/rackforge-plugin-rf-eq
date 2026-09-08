@@ -1,0 +1,21 @@
+[package]
+name = "rf-eq-lab"
+description = "Metadata generator and bench for RF-EQ"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "rf-eq-lab"
+path = "src/main.rs"
+
+[dependencies]
+rf-eq-contract.workspace = true
+rf-eq-dsp.workspace = true
+hound = "3.5"
+serde_json = "1.0"
+
+[dev-dependencies]
+rackforge-plugin-runtime.workspace = true
+rf-eq-contract.workspace = true

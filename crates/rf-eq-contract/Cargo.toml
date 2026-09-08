@@ -1,0 +1,9 @@
+[package]
+name = "rf-eq-contract"
+description = "The parameter contract of RF-EQ"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]

@@ -1,0 +1,327 @@
+{
+  "pages": [
+    {
+      "id": "filters",
+      "name": "Filters",
+      "order": 0
+    },
+    {
+      "id": "output",
+      "name": "Output",
+      "order": 1
+    }
+  ],
+  "parameters": [
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": false,
+        "read_only": false
+      },
+      "id": "hpf.enable",
+      "index": 0,
+      "kind": {
+        "default": false,
+        "type": "boolean"
+      },
+      "name": "High-pass",
+      "order": 0,
+      "page": "filters",
+      "suggested_control": "toggle"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "hpf.frequency",
+      "index": 1,
+      "kind": {
+        "default": 40.0,
+        "maximum": 500.0,
+        "minimum": 20.0,
+        "step": 1.0,
+        "taper": "logarithmic",
+        "type": "float",
+        "unit": "Hz"
+      },
+      "name": "HPF Freq",
+      "order": 1,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "low_shelf.frequency",
+      "index": 2,
+      "kind": {
+        "default": 120.0,
+        "maximum": 1000.0,
+        "minimum": 40.0,
+        "step": 1.0,
+        "taper": "logarithmic",
+        "type": "float",
+        "unit": "Hz"
+      },
+      "name": "Low Freq",
+      "order": 2,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "low_shelf.gain",
+      "index": 3,
+      "kind": {
+        "default": 0.0,
+        "maximum": 15.0,
+        "minimum": -15.0,
+        "step": 0.1,
+        "taper": "linear",
+        "type": "float",
+        "unit": "dB"
+      },
+      "name": "Low Gain",
+      "order": 3,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak1.frequency",
+      "index": 4,
+      "kind": {
+        "default": 500.0,
+        "maximum": 8000.0,
+        "minimum": 100.0,
+        "step": 1.0,
+        "taper": "logarithmic",
+        "type": "float",
+        "unit": "Hz"
+      },
+      "name": "Peak 1 Freq",
+      "order": 4,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak1.gain",
+      "index": 5,
+      "kind": {
+        "default": 0.0,
+        "maximum": 15.0,
+        "minimum": -15.0,
+        "step": 0.1,
+        "taper": "linear",
+        "type": "float",
+        "unit": "dB"
+      },
+      "name": "Peak 1 Gain",
+      "order": 5,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak1.q",
+      "index": 6,
+      "kind": {
+        "default": 1.0,
+        "maximum": 10.0,
+        "minimum": 0.3,
+        "step": 0.01,
+        "taper": "logarithmic",
+        "type": "float"
+      },
+      "name": "Peak 1 Q",
+      "order": 6,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak2.frequency",
+      "index": 7,
+      "kind": {
+        "default": 3000.0,
+        "maximum": 16000.0,
+        "minimum": 200.0,
+        "step": 1.0,
+        "taper": "logarithmic",
+        "type": "float",
+        "unit": "Hz"
+      },
+      "name": "Peak 2 Freq",
+      "order": 7,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak2.gain",
+      "index": 8,
+      "kind": {
+        "default": 0.0,
+        "maximum": 15.0,
+        "minimum": -15.0,
+        "step": 0.1,
+        "taper": "linear",
+        "type": "float",
+        "unit": "dB"
+      },
+      "name": "Peak 2 Gain",
+      "order": 8,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak2.q",
+      "index": 9,
+      "kind": {
+        "default": 1.0,
+        "maximum": 10.0,
+        "minimum": 0.3,
+        "step": 0.01,
+        "taper": "logarithmic",
+        "type": "float"
+      },
+      "name": "Peak 2 Q",
+      "order": 9,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "high_shelf.frequency",
+      "index": 10,
+      "kind": {
+        "default": 8000.0,
+        "maximum": 16000.0,
+        "minimum": 1000.0,
+        "step": 1.0,
+        "taper": "logarithmic",
+        "type": "float",
+        "unit": "Hz"
+      },
+      "name": "High Freq",
+      "order": 10,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "high_shelf.gain",
+      "index": 11,
+      "kind": {
+        "default": 0.0,
+        "maximum": 15.0,
+        "minimum": -15.0,
+        "step": 0.1,
+        "taper": "linear",
+        "type": "float",
+        "unit": "dB"
+      },
+      "name": "High Gain",
+      "order": 11,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "output.trim",
+      "index": 12,
+      "kind": {
+        "default": 0.0,
+        "maximum": 24.0,
+        "minimum": -24.0,
+        "step": 0.1,
+        "taper": "linear",
+        "type": "float",
+        "unit": "dB"
+      },
+      "name": "Output",
+      "order": 0,
+      "page": "output",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": false,
+        "read_only": false
+      },
+      "id": "output.bypass",
+      "index": 13,
+      "kind": {
+        "default": false,
+        "type": "boolean"
+      },
+      "name": "Bypass",
+      "order": 1,
+      "page": "output",
+      "suggested_control": "toggle"
+    }
+  ],
+  "schema_version": 1
+}

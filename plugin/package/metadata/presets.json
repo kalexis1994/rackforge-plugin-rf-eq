@@ -1,0 +1,72 @@
+{
+  "banks": [
+    {
+      "id": "factory",
+      "name": "Factory",
+      "order": 0
+    }
+  ],
+  "presets": [
+    {
+      "bank": "factory",
+      "category": "Setting",
+      "description": "Every band at zero, the high-pass off: the signal as it came.",
+      "editable": false,
+      "id": "flat",
+      "name": "Flat",
+      "order": 0,
+      "tags": []
+    },
+    {
+      "bank": "factory",
+      "category": "Setting",
+      "description": "Two and a half decibels of air above eight kilohertz, a decibel less low shelf at 120 Hz.",
+      "editable": false,
+      "id": "piano_air",
+      "name": "Piano Air",
+      "order": 1,
+      "tags": []
+    },
+    {
+      "bank": "factory",
+      "category": "Setting",
+      "description": "Two decibels more below 150 Hz, two less above six kilohertz.",
+      "editable": false,
+      "id": "warm",
+      "name": "Warm",
+      "order": 2,
+      "tags": []
+    },
+    {
+      "bank": "factory",
+      "category": "Setting",
+      "description": "Three decibels at three kilohertz, a little over an octave wide.",
+      "editable": false,
+      "id": "presence",
+      "name": "Presence",
+      "order": 3,
+      "tags": []
+    },
+    {
+      "bank": "factory",
+      "category": "Setting",
+      "description": "The high-pass on at 60 Hz: stage rumble and handling noise out, the low end kept.",
+      "editable": false,
+      "id": "rumble_cut",
+      "name": "Rumble Cut",
+      "order": 4,
+      "tags": []
+    },
+    {
+      "bank": "factory",
+      "category": "Setting",
+      "description": "Nothing below 300 Hz, twelve decibels less above three kilohertz: a narrow line.",
+      "editable": false,
+      "id": "telephone",
+      "name": "Telephone",
+      "order": 5,
+      "tags": []
+    }
+  ],
+  "schema_version": 1
+}

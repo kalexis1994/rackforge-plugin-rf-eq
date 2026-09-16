@@ -120,6 +120,14 @@
       return;
     }
 
+    if (message.kind === "parameter_changed") {
+      applyValues(
+        [{ index: message.parameter_index, value: message.value }],
+        writeEpoch,
+      );
+      return;
+    }
+
     if (message.kind !== "response") return;
     const waiting = pending.get(message.request_id);
     if (!waiting) return;
@@ -191,7 +199,7 @@
 
   function valueOf(parameter) {
     const stored = state.values.get(parameter.index);
-    if (stored !== undefined) return stored;
+    if (Number.isFinite(stored)) return stored;
     const kind = parameter.kind;
     if (kind.type === "boolean") return kind.default ? 1 : 0;
     return kind.default;
@@ -607,6 +615,7 @@
 
   function applyValues(values, readEpoch) {
     (values || []).forEach((entry) => {
+      if (!Number.isInteger(entry.index) || !Number.isFinite(entry.value)) return;
       if (state.held.has(entry.index)) return;
       if ((state.writtenAt.get(entry.index) || 0) > readEpoch) return;
       state.values.set(entry.index, entry.value);

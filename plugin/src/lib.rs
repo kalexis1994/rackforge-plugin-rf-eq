@@ -45,6 +45,13 @@ impl Processor for RfEqProcessor {
         self.engine.parameter(index)
     }
 
+    fn latency_frames(&self) -> u32 {
+        self.engine
+            .latency()
+            .try_into()
+            .expect("the EQ latency fits in the portable ABI")
+    }
+
     fn reset(&mut self) {
         self.engine.reset();
     }
@@ -180,6 +187,12 @@ mod tests {
         assert!(!processor.prepare(48_000.0, 256, 2, 3));
         assert!(!processor.prepare(0.0, 256, 2, 2));
         assert!(processor.prepare(48_000.0, 256, 1, 2));
+    }
+
+    #[test]
+    fn reports_zero_latency_to_the_host() {
+        let processor = prepared();
+        assert_eq!(processor.latency_frames(), 0);
     }
 
     #[test]

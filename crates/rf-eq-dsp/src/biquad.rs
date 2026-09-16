@@ -77,6 +77,15 @@ impl Coefficients {
         Self::normalised(half, -(1.0 + cs), half, 1.0 + alpha, -2.0 * cs, 1.0 - alpha)
     }
 
+    /// A second-order low-pass, minus three decibels at `frequency` when
+    /// `q` is the Butterworth value.
+    pub fn low_pass(frequency: f32, q: f32, sample_rate: f32) -> Self {
+        let Prototype { cs, sn } = Prototype::at(frequency, sample_rate);
+        let alpha = sn / (2.0 * q);
+        let half = (1.0 - cs) * 0.5;
+        Self::normalised(half, 1.0 - cs, half, 1.0 + alpha, -2.0 * cs, 1.0 - alpha)
+    }
+
     /// A peaking band: `gain_db` at `frequency`, `q` its width.
     pub fn peak(frequency: f32, gain_db: f32, q: f32, sample_rate: f32) -> Self {
         let Prototype { cs, sn } = Prototype::at(frequency, sample_rate);
@@ -221,6 +230,16 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn the_low_pass_rejects_nyquist_and_passes_direct_current() {
+        let coefficients = Coefficients::low_pass(1_000.0, core::f32::consts::FRAC_1_SQRT_2, RATE);
+        let dc = coefficients.b0 + coefficients.b1 + coefficients.b2;
+        let dc_denominator = 1.0 + coefficients.a1 + coefficients.a2;
+        assert!((dc / dc_denominator - 1.0).abs() < 1.0e-5);
+        let nyquist = coefficients.b0 - coefficients.b1 + coefficients.b2;
+        assert!(nyquist.abs() < 1.0e-6);
     }
 
     #[test]

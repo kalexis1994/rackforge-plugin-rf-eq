@@ -1,6 +1,6 @@
 [package]
 name = "rf-eq-dsp"
-description = "The five-band equaliser of RF-EQ"
+description = "The eight-band equaliser of RF-EQ"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

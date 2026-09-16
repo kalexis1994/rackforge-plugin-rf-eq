@@ -48,6 +48,18 @@
         flex-wrap: wrap;
       }
 
+      header label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      header select {
+        min-width: 0;
+        max-width: 100%;
+      }
+
       .wordmark {
         font-size: 22px;
         font-weight: 700;
@@ -92,6 +104,113 @@
         align-content: flex-start;
       }
 
+      .response-panel {
+        position: relative;
+        margin: 14px 20px 0;
+        min-height: 170px;
+        height: clamp(170px, 28vh, 260px);
+        border: 1px solid var(--enclosure-edge);
+        border-radius: 16px;
+        overflow: hidden;
+        background:
+          radial-gradient(80% 120% at 50% 100%, #17373355, transparent 72%),
+          linear-gradient(180deg, #131a20, #0c1115);
+        box-shadow: inset 0 1px #ffffff0a, 0 10px 24px #0006;
+      }
+
+      .response-panel svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+
+      .response-grid line {
+        stroke: #52606a33;
+        stroke-width: 1;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .response-grid line.zero {
+        stroke: #aeb6bd66;
+      }
+
+      .response-grid text {
+        fill: var(--muted);
+        font-size: 12px;
+        font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+      }
+
+      .response-fill {
+        fill: url(#response-gradient);
+        opacity: 0.22;
+      }
+
+      .response-curve {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 3;
+        vector-effect: non-scaling-stroke;
+        filter: drop-shadow(0 0 5px #2ec4b688);
+      }
+
+      .response-node {
+        cursor: grab;
+        outline: none;
+      }
+
+      .response-node:active {
+        cursor: grabbing;
+      }
+
+      .response-node circle {
+        fill: #172127;
+        stroke: var(--node-color, var(--accent));
+        stroke-width: 3;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .response-node.off circle {
+        fill: #172127;
+        stroke-dasharray: 4 3;
+        opacity: 0.58;
+      }
+
+      .response-node.held circle,
+      .response-node:focus-visible circle {
+        fill: var(--node-color, var(--accent));
+        stroke: white;
+      }
+
+      .response-node text {
+        fill: white;
+        font: 700 12px "Segoe UI", Roboto, system-ui, sans-serif;
+        text-anchor: middle;
+        dominant-baseline: central;
+        pointer-events: none;
+      }
+
+      .response-caption {
+        position: absolute;
+        top: 10px;
+        left: 14px;
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        pointer-events: none;
+      }
+
+      .response-caption strong {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .response-caption span {
+        color: var(--muted);
+        font-size: 10px;
+      }
+
       .group {
         flex: 1 1 320px;
         background: linear-gradient(180deg, #262e36 0%, var(--enclosure) 42%, #1a2026 100%);
@@ -102,6 +221,14 @@
         flex-direction: column;
         gap: 10px;
         box-shadow: 0 10px 24px #0008;
+      }
+
+      .group[data-page="filters"] {
+        flex: 3 1 700px;
+      }
+
+      .group[data-page="output"] {
+        flex: 1 1 220px;
       }
 
       .group-name {
@@ -254,13 +381,84 @@
       .status.error {
         color: #e57373;
       }
+
+      @media (max-width: 680px) {
+        header {
+          padding: 10px 12px 8px;
+          gap: 10px;
+        }
+
+        .wordmark {
+          font-size: 18px;
+        }
+
+        header label {
+          flex: 1 1 100%;
+        }
+
+        header select {
+          flex: 1;
+          width: 0;
+        }
+
+        .response-panel {
+          margin: 10px 10px 0;
+          height: 190px;
+        }
+
+        main {
+          padding: 10px;
+          gap: 10px;
+        }
+
+        .group {
+          flex-basis: 100%;
+          padding-inline: 10px;
+        }
+
+        .strip {
+          flex: 1 1 210px;
+        }
+
+        .strip .knobs {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .knob {
+          width: 64px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .strip {
+          flex-basis: 100%;
+          min-width: 0;
+        }
+
+        .strip .knobs {
+          flex-wrap: nowrap;
+          justify-content: space-evenly;
+        }
+
+        .response-caption span {
+          font-size: 9px;
+        }
+      }
+
+      @media (max-height: 620px) and (min-width: 681px) {
+        .response-panel {
+          height: 150px;
+          min-height: 150px;
+        }
+      }
     </style>
   </head>
   <body>
     <header>
       <div>
         <div class="wordmark">RF-EQ</div>
-        <div class="subtitle">Five-band parametric equaliser</div>
+        <div class="subtitle">Eight-band parametric equaliser</div>
       </div>
       <div class="spacer"></div>
       <label>
@@ -268,6 +466,25 @@
         <select id="presets" aria-label="Factory setting"></select>
       </label>
     </header>
+
+    <section class="response-panel" aria-label="Interactive frequency response">
+      <div class="response-caption">
+        <strong>Response</strong>
+        <span>Drag nodes · wheel adjusts Q</span>
+      </div>
+      <svg id="response" viewBox="0 0 1000 260" preserveAspectRatio="none" role="img" aria-label="Equaliser response from 20 hertz to 20 kilohertz">
+        <defs>
+          <linearGradient id="response-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2ec4b6" />
+            <stop offset="1" stop-color="#2ec4b6" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <g class="response-grid" id="response-grid"></g>
+        <path class="response-fill" id="response-fill"></path>
+        <path class="response-curve" id="response-curve"></path>
+        <g id="response-nodes"></g>
+      </svg>
+    </section>
 
     <main id="panel"></main>
 

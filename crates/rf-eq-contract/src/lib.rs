@@ -13,12 +13,12 @@ pub mod preset;
 pub use preset::{PRESET_COUNT, PRESETS, Preset, settings_for};
 
 /// Number of public parameters. Also the length of the state block in `f32`s.
-pub const PARAMETER_COUNT: usize = 14;
+pub const PARAMETER_COUNT: usize = 22;
 
 /// The parameter count of each earlier state layout, so a block saved by an
 /// older build can still be read. Length is the only thing that identifies a
 /// layout here, which is why parameters are only ever appended.
-pub const PREVIOUS_PARAMETER_COUNTS: [usize; 0] = [];
+pub const PREVIOUS_PARAMETER_COUNTS: [usize; 1] = [14];
 
 /// Editor pages. RackForge renders them in `order`; the web surface uses the
 /// same identifiers to group its controls.
@@ -271,7 +271,7 @@ pub const PARAMETERS: [ParameterSpec; PARAMETER_COUNT] = [
         2,
         "low_shelf.frequency",
         "Low Freq",
-        2,
+        10,
         40.0,
         1_000.0,
         120.0,
@@ -281,7 +281,7 @@ pub const PARAMETERS: [ParameterSpec; PARAMETER_COUNT] = [
         "low_shelf.gain",
         "Low Gain",
         "filters",
-        3,
+        11,
         -BAND_GAIN_DB,
         BAND_GAIN_DB,
     ),
@@ -289,7 +289,7 @@ pub const PARAMETERS: [ParameterSpec; PARAMETER_COUNT] = [
         4,
         "peak1.frequency",
         "Peak 1 Freq",
-        4,
+        20,
         100.0,
         8_000.0,
         500.0,
@@ -299,16 +299,16 @@ pub const PARAMETERS: [ParameterSpec; PARAMETER_COUNT] = [
         "peak1.gain",
         "Peak 1 Gain",
         "filters",
-        5,
+        21,
         -BAND_GAIN_DB,
         BAND_GAIN_DB,
     ),
-    quality(6, "peak1.q", "Peak 1 Q", 6),
+    quality(6, "peak1.q", "Peak 1 Q", 22),
     hertz(
         7,
         "peak2.frequency",
         "Peak 2 Freq",
-        7,
+        30,
         200.0,
         16_000.0,
         3_000.0,
@@ -318,16 +318,16 @@ pub const PARAMETERS: [ParameterSpec; PARAMETER_COUNT] = [
         "peak2.gain",
         "Peak 2 Gain",
         "filters",
-        8,
+        31,
         -BAND_GAIN_DB,
         BAND_GAIN_DB,
     ),
-    quality(9, "peak2.q", "Peak 2 Q", 9),
+    quality(9, "peak2.q", "Peak 2 Q", 32),
     hertz(
         10,
         "high_shelf.frequency",
         "High Freq",
-        10,
+        60,
         1_000.0,
         16_000.0,
         8_000.0,
@@ -337,12 +337,60 @@ pub const PARAMETERS: [ParameterSpec; PARAMETER_COUNT] = [
         "high_shelf.gain",
         "High Gain",
         "filters",
-        11,
+        61,
         -BAND_GAIN_DB,
         BAND_GAIN_DB,
     ),
     decibels(12, "output.trim", "Output", "output", 0, -24.0, 24.0),
     switch(13, "output.bypass", "Bypass", "output", 1, false),
+    hertz(
+        14,
+        "peak3.frequency",
+        "Peak 3 Freq",
+        40,
+        300.0,
+        20_000.0,
+        6_000.0,
+    ),
+    decibels(
+        15,
+        "peak3.gain",
+        "Peak 3 Gain",
+        "filters",
+        41,
+        -BAND_GAIN_DB,
+        BAND_GAIN_DB,
+    ),
+    quality(16, "peak3.q", "Peak 3 Q", 42),
+    hertz(
+        17,
+        "peak4.frequency",
+        "Peak 4 Freq",
+        50,
+        500.0,
+        20_000.0,
+        12_000.0,
+    ),
+    decibels(
+        18,
+        "peak4.gain",
+        "Peak 4 Gain",
+        "filters",
+        51,
+        -BAND_GAIN_DB,
+        BAND_GAIN_DB,
+    ),
+    quality(19, "peak4.q", "Peak 4 Q", 52),
+    switch(20, "lpf.enable", "Low-pass", "filters", 70, false),
+    hertz(
+        21,
+        "lpf.frequency",
+        "LPF Freq",
+        71,
+        500.0,
+        20_000.0,
+        20_000.0,
+    ),
 ];
 
 /// The flat settings block: one `f32` per parameter, in index order. It is
@@ -523,5 +571,13 @@ mod tests {
         expect(index::HIGH_SHELF_GAIN, "high_shelf.gain");
         expect(index::OUTPUT, "output.trim");
         expect(index::BYPASS, "output.bypass");
+        expect(index::PEAK3_FREQUENCY, "peak3.frequency");
+        expect(index::PEAK3_GAIN, "peak3.gain");
+        expect(index::PEAK3_Q, "peak3.q");
+        expect(index::PEAK4_FREQUENCY, "peak4.frequency");
+        expect(index::PEAK4_GAIN, "peak4.gain");
+        expect(index::PEAK4_Q, "peak4.q");
+        expect(index::LPF_ENABLE, "lpf.enable");
+        expect(index::LPF_FREQUENCY, "lpf.frequency");
     }
 }

@@ -159,7 +159,7 @@ def make_banner() -> None:
     title = font(96)
     draw.text((1240, 160), "RF-EQ", font=title, fill=INK, anchor="mm")
     subtitle = font(34)
-    draw.text((1240, 240), "Five-band parametric equaliser", font=subtitle, fill=ACCENT, anchor="mm")
+    draw.text((1240, 240), "Eight-band parametric equaliser", font=subtitle, fill=ACCENT, anchor="mm")
     image.save(OUTPUT / "banner.png")
 
 
@@ -170,7 +170,7 @@ def make_splash() -> None:
     title = font(150)
     draw.text((960, 200), "RF-EQ", font=title, fill=INK, anchor="mm")
     subtitle = font(44)
-    draw.text((960, 320), "Five-band parametric equaliser", font=subtitle, fill=ACCENT, anchor="mm")
+    draw.text((960, 320), "Eight-band parametric equaliser", font=subtitle, fill=ACCENT, anchor="mm")
     draw.rounded_rectangle([160, 420, 1760, 920], radius=40, fill=PANEL_LIGHT, outline=STEEL, width=4)
     curve(draw, (220, 460, 1700, 880), stroke=10)
     footer = font(34)

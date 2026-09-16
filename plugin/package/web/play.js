@@ -44,18 +44,51 @@
     low_shelf: "Low shelf",
     peak1: "Peak 1",
     peak2: "Peak 2",
+    peak3: "Peak 3",
+    peak4: "Peak 4",
     high_shelf: "High shelf",
+    lpf: "Low-pass",
   };
+
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const GRAPH = {
+    width: 1000,
+    height: 260,
+    left: 34,
+    right: 16,
+    top: 42,
+    bottom: 26,
+    minimumFrequency: 20,
+    maximumFrequency: 20000,
+    minimumDb: -18,
+    maximumDb: 18,
+  };
+  const GRAPH_BANDS = [
+    { prefix: "hpf", label: "HP", colour: "#f3a95f", filter: "high-pass" },
+    { prefix: "low_shelf", label: "LS", colour: "#e8c46f", filter: "low-shelf" },
+    { prefix: "peak1", label: "1", colour: "#8fd7be", filter: "peak" },
+    { prefix: "peak2", label: "2", colour: "#64d2c8", filter: "peak" },
+    { prefix: "peak3", label: "3", colour: "#66b9e8", filter: "peak" },
+    { prefix: "peak4", label: "4", colour: "#9e9cf2", filter: "peak" },
+    { prefix: "high_shelf", label: "HS", colour: "#dc8ed0", filter: "high-shelf" },
+    { prefix: "lpf", label: "LP", colour: "#e77979", filter: "low-pass" },
+  ];
 
   const panelElement = document.getElementById("panel");
   const presetElement = document.getElementById("presets");
   const statusElement = document.getElementById("status");
+  const responseElement = document.getElementById("response");
+  const responseGridElement = document.getElementById("response-grid");
+  const responseFillElement = document.getElementById("response-fill");
+  const responseCurveElement = document.getElementById("response-curve");
+  const responseNodesElement = document.getElementById("response-nodes");
 
   const state = {
     surface: "play",
     schema: null,
     values: new Map(),
     controls: new Map(),
+    responseNodes: new Map(),
     queue: new Map(),
     writtenAt: new Map(),
     held: new Set(),
@@ -73,6 +106,7 @@
   let lastWriteAt = 0;
   let refreshTimer = null;
   let statusTimer = null;
+  let responseFrame = null;
 
   /* --------------------------------------------------------------- bridge */
 
@@ -205,6 +239,330 @@
     return kind.default;
   }
 
+  /* ------------------------------------------------ frequency response */
+
+  function parameterById(id) {
+    return state.schema && state.schema.parameters.find((parameter) => parameter.id === id);
+  }
+
+  function graphX(frequency) {
+    const width = GRAPH.width - GRAPH.left - GRAPH.right;
+    const position = Math.log(frequency / GRAPH.minimumFrequency) /
+      Math.log(GRAPH.maximumFrequency / GRAPH.minimumFrequency);
+    return GRAPH.left + position * width;
+  }
+
+  function frequencyAtGraphX(x) {
+    const width = GRAPH.width - GRAPH.left - GRAPH.right;
+    const position = Math.min(1, Math.max(0, (x - GRAPH.left) / width));
+    return GRAPH.minimumFrequency *
+      Math.pow(GRAPH.maximumFrequency / GRAPH.minimumFrequency, position);
+  }
+
+  function graphY(decibels) {
+    const height = GRAPH.height - GRAPH.top - GRAPH.bottom;
+    const clamped = Math.min(GRAPH.maximumDb, Math.max(GRAPH.minimumDb, decibels));
+    return GRAPH.top + (GRAPH.maximumDb - clamped) /
+      (GRAPH.maximumDb - GRAPH.minimumDb) * height;
+  }
+
+  function decibelsAtGraphY(y) {
+    const height = GRAPH.height - GRAPH.top - GRAPH.bottom;
+    const position = Math.min(1, Math.max(0, (y - GRAPH.top) / height));
+    return GRAPH.maximumDb - position * (GRAPH.maximumDb - GRAPH.minimumDb);
+  }
+
+  function coefficients(type, frequency, gain, quality, sampleRate) {
+    const omega = 2 * Math.PI * Math.min(frequency, sampleRate * 0.49) / sampleRate;
+    const cosine = Math.cos(omega);
+    const sine = Math.sin(omega);
+    const q = Math.max(0.01, quality || Math.SQRT1_2);
+    let alpha = sine / (2 * q);
+    let b0;
+    let b1;
+    let b2;
+    let a0;
+    let a1;
+    let a2;
+
+    if (type === "high-pass" || type === "low-pass") {
+      const high = type === "high-pass";
+      b0 = high ? (1 + cosine) / 2 : (1 - cosine) / 2;
+      b1 = high ? -(1 + cosine) : 1 - cosine;
+      b2 = b0;
+      a0 = 1 + alpha;
+      a1 = -2 * cosine;
+      a2 = 1 - alpha;
+    } else if (type === "peak") {
+      const amplitude = Math.pow(10, gain / 40);
+      b0 = 1 + alpha * amplitude;
+      b1 = -2 * cosine;
+      b2 = 1 - alpha * amplitude;
+      a0 = 1 + alpha / amplitude;
+      a1 = -2 * cosine;
+      a2 = 1 - alpha / amplitude;
+    } else {
+      const amplitude = Math.pow(10, gain / 40);
+      alpha = sine / 2 * Math.SQRT2;
+      const root = 2 * Math.sqrt(amplitude) * alpha;
+      if (type === "low-shelf") {
+        b0 = amplitude * ((amplitude + 1) - (amplitude - 1) * cosine + root);
+        b1 = 2 * amplitude * ((amplitude - 1) - (amplitude + 1) * cosine);
+        b2 = amplitude * ((amplitude + 1) - (amplitude - 1) * cosine - root);
+        a0 = (amplitude + 1) + (amplitude - 1) * cosine + root;
+        a1 = -2 * ((amplitude - 1) + (amplitude + 1) * cosine);
+        a2 = (amplitude + 1) + (amplitude - 1) * cosine - root;
+      } else {
+        b0 = amplitude * ((amplitude + 1) + (amplitude - 1) * cosine + root);
+        b1 = -2 * amplitude * ((amplitude - 1) + (amplitude + 1) * cosine);
+        b2 = amplitude * ((amplitude + 1) + (amplitude - 1) * cosine - root);
+        a0 = (amplitude + 1) - (amplitude - 1) * cosine + root;
+        a1 = 2 * ((amplitude - 1) - (amplitude + 1) * cosine);
+        a2 = (amplitude + 1) - (amplitude - 1) * cosine - root;
+      }
+    }
+    return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
+  }
+
+  function magnitudeDb(filter, frequency, sampleRate) {
+    const omega = 2 * Math.PI * frequency / sampleRate;
+    const cosine = Math.cos(omega);
+    const sine = Math.sin(omega);
+    const cosine2 = Math.cos(2 * omega);
+    const sine2 = Math.sin(2 * omega);
+    const [b0, b1, b2, a1, a2] = filter;
+    const numeratorReal = b0 + b1 * cosine + b2 * cosine2;
+    const numeratorImaginary = -b1 * sine - b2 * sine2;
+    const denominatorReal = 1 + a1 * cosine + a2 * cosine2;
+    const denominatorImaginary = -a1 * sine - a2 * sine2;
+    const numerator = numeratorReal * numeratorReal + numeratorImaginary * numeratorImaginary;
+    const denominator = denominatorReal * denominatorReal + denominatorImaginary * denominatorImaginary;
+    return 10 * Math.log10(Math.max(1e-12, numerator / Math.max(1e-12, denominator)));
+  }
+
+  function responseFilters() {
+    const sampleRate = 48000;
+    return GRAPH_BANDS.flatMap((band) => {
+      const frequencyParameter = parameterById(band.prefix + ".frequency");
+      if (!frequencyParameter) return [];
+      const enableParameter = parameterById(band.prefix + ".enable");
+      if (enableParameter && valueOf(enableParameter) < 0.5) return [];
+      const gainParameter = parameterById(band.prefix + ".gain");
+      const qualityParameter = parameterById(band.prefix + ".q");
+      return [coefficients(
+        band.filter,
+        valueOf(frequencyParameter),
+        gainParameter ? valueOf(gainParameter) : 0,
+        qualityParameter ? valueOf(qualityParameter) : Math.SQRT1_2,
+        sampleRate,
+      )];
+    });
+  }
+
+  function scheduleResponsePaint() {
+    if (responseFrame !== null) return;
+    responseFrame = requestAnimationFrame(() => {
+      responseFrame = null;
+      paintResponse();
+    });
+  }
+
+  function paintResponse() {
+    if (!state.schema || !responseCurveElement) return;
+    const bypass = parameterById("output.bypass");
+    const trim = parameterById("output.trim");
+    const filters = bypass && valueOf(bypass) >= 0.5 ? [] : responseFilters();
+    const trimDb = bypass && valueOf(bypass) >= 0.5 ? 0 : (trim ? valueOf(trim) : 0);
+    const points = [];
+    for (let index = 0; index < 240; index += 1) {
+      const position = index / 239;
+      const frequency = GRAPH.minimumFrequency *
+        Math.pow(GRAPH.maximumFrequency / GRAPH.minimumFrequency, position);
+      const decibels = filters.reduce(
+        (total, filter) => total + magnitudeDb(filter, frequency, 48000),
+        trimDb,
+      );
+      points.push([graphX(frequency), graphY(decibels)]);
+    }
+    const path = points.map((point, index) =>
+      (index === 0 ? "M " : " L ") + point[0].toFixed(2) + " " + point[1].toFixed(2),
+    ).join("");
+    responseCurveElement.setAttribute("d", path);
+    const baseline = graphY(0).toFixed(2);
+    responseFillElement.setAttribute(
+      "d",
+      path + " L " + points.at(-1)[0].toFixed(2) + " " + baseline +
+        " L " + points[0][0].toFixed(2) + " " + baseline + " Z",
+    );
+
+    GRAPH_BANDS.forEach((band) => {
+      const node = state.responseNodes.get(band.prefix);
+      const frequency = parameterById(band.prefix + ".frequency");
+      if (!node || !frequency) return;
+      const gain = parameterById(band.prefix + ".gain");
+      const enable = parameterById(band.prefix + ".enable");
+      const nodeGain = gain ? valueOf(gain) : 0;
+      node.element.setAttribute(
+        "transform",
+        "translate(" + graphX(valueOf(frequency)).toFixed(2) + " " + graphY(nodeGain).toFixed(2) + ")",
+      );
+      node.element.classList.toggle("off", Boolean(enable && valueOf(enable) < 0.5));
+      node.element.setAttribute("aria-valuenow", String(valueOf(frequency)));
+      node.element.setAttribute(
+        "aria-valuetext",
+        Math.round(valueOf(frequency)) + " Hz" + (gain ? ", " + nodeGain.toFixed(1) + " dB" : ""),
+      );
+    });
+  }
+
+  function quantiseParameter(parameter, value) {
+    const kind = parameter.kind;
+    const step = kind.step || 0.001;
+    const stepped = Math.round(value / step) * step;
+    return Math.min(kind.maximum, Math.max(kind.minimum, stepped));
+  }
+
+  function sizeResponse() {
+    const bounds = responseElement.getBoundingClientRect();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    GRAPH.width = Math.max(420, bounds.width / bounds.height * GRAPH.height);
+    responseElement.setAttribute("viewBox", "0 0 " + GRAPH.width + " " + GRAPH.height);
+  }
+
+  function buildResponse() {
+    sizeResponse();
+    responseGridElement.textContent = "";
+    responseNodesElement.textContent = "";
+    state.responseNodes.clear();
+    const frequencies = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+    const decibels = [-18, -12, -6, 0, 6, 12, 18];
+    frequencies.forEach((frequency) => {
+      const x = graphX(frequency);
+      const line = document.createElementNS(SVG_NS, "line");
+      line.setAttribute("x1", x);
+      line.setAttribute("x2", x);
+      line.setAttribute("y1", GRAPH.top);
+      line.setAttribute("y2", GRAPH.height - GRAPH.bottom);
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", x);
+      label.setAttribute("y", GRAPH.height - 8);
+      label.setAttribute("text-anchor", frequency === 20 ? "start" : frequency === 20000 ? "end" : "middle");
+      label.textContent = frequency >= 1000 ? frequency / 1000 + "k" : String(frequency);
+      responseGridElement.append(line, label);
+    });
+    decibels.forEach((decibelsValue) => {
+      const y = graphY(decibelsValue);
+      const line = document.createElementNS(SVG_NS, "line");
+      line.setAttribute("x1", GRAPH.left);
+      line.setAttribute("x2", GRAPH.width - GRAPH.right);
+      line.setAttribute("y1", y);
+      line.setAttribute("y2", y);
+      if (decibelsValue === 0) line.classList.add("zero");
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", GRAPH.left - 5);
+      label.setAttribute("y", y + 4);
+      label.setAttribute("text-anchor", "end");
+      label.textContent = (decibelsValue > 0 ? "+" : "") + decibelsValue;
+      responseGridElement.append(line, label);
+    });
+
+    GRAPH_BANDS.forEach((band) => {
+      const frequency = parameterById(band.prefix + ".frequency");
+      if (!frequency) return;
+      const gain = parameterById(band.prefix + ".gain");
+      const quality = parameterById(band.prefix + ".q");
+      const enable = parameterById(band.prefix + ".enable");
+      const group = document.createElementNS(SVG_NS, "g");
+      group.setAttribute("class", "response-node");
+      group.setAttribute("role", "slider");
+      group.setAttribute("tabindex", "0");
+      group.setAttribute("aria-label", STRIP_NAMES[band.prefix]);
+      group.setAttribute("aria-valuemin", String(frequency.kind.minimum));
+      group.setAttribute("aria-valuemax", String(frequency.kind.maximum));
+      group.style.setProperty("--node-color", band.colour);
+      const circle = document.createElementNS(SVG_NS, "circle");
+      circle.setAttribute("r", "12");
+      const label = document.createElementNS(SVG_NS, "text");
+      label.textContent = band.label;
+      group.append(circle, label);
+      responseNodesElement.appendChild(group);
+      state.responseNodes.set(band.prefix, { element: group });
+
+      let dragging = false;
+      let pointerId = null;
+      function graphPoint(event) {
+        const bounds = responseElement.getBoundingClientRect();
+        return {
+          x: (event.clientX - bounds.left) / bounds.width * GRAPH.width,
+          y: (event.clientY - bounds.top) / bounds.height * GRAPH.height,
+        };
+      }
+      function move(event) {
+        if (!dragging) return;
+        const point = graphPoint(event);
+        write(frequency, quantiseParameter(frequency, frequencyAtGraphX(point.x)));
+        if (gain) write(gain, quantiseParameter(gain, decibelsAtGraphY(point.y)));
+        event.preventDefault();
+      }
+      function finish() {
+        if (!dragging) return;
+        dragging = false;
+        gestures.delete(finish);
+        state.held.delete(frequency.index);
+        if (gain) state.held.delete(gain.index);
+        group.classList.remove("held");
+        releaseCapture(group, pointerId);
+        scheduleRefresh();
+      }
+      group.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        pointerId = event.pointerId;
+        state.held.add(frequency.index);
+        if (gain) state.held.add(gain.index);
+        group.classList.add("held");
+        gestures.add(finish);
+        capture(group, pointerId);
+        move(event);
+      });
+      group.addEventListener("pointermove", move);
+      group.addEventListener("pointerup", finish);
+      group.addEventListener("pointercancel", finish);
+      group.addEventListener("lostpointercapture", finish);
+      group.addEventListener("dblclick", () => {
+        if (enable) write(enable, valueOf(enable) >= 0.5 ? 0 : 1);
+        else {
+          write(frequency, frequency.kind.default);
+          if (gain) write(gain, gain.kind.default);
+          if (quality) write(quality, quality.kind.default);
+        }
+      });
+      group.addEventListener("wheel", (event) => {
+        if (!quality) return;
+        const direction = event.deltaY < 0 ? 1 : -1;
+        const position = normalise(quality.kind, valueOf(quality)) + direction / 40;
+        write(quality, quantiseParameter(quality, denormalise(quality.kind, position)));
+        event.preventDefault();
+      }, { passive: false });
+      group.addEventListener("keydown", (event) => {
+        let frequencyPosition = normalise(frequency.kind, valueOf(frequency));
+        let gainValue = gain ? valueOf(gain) : 0;
+        if (event.key === "ArrowLeft") frequencyPosition -= event.shiftKey ? 0.005 : 0.025;
+        else if (event.key === "ArrowRight") frequencyPosition += event.shiftKey ? 0.005 : 0.025;
+        else if (gain && event.key === "ArrowUp") gainValue += event.shiftKey ? 0.1 : 0.5;
+        else if (gain && event.key === "ArrowDown") gainValue -= event.shiftKey ? 0.1 : 0.5;
+        else if (enable && (event.key === "Enter" || event.key === " ")) {
+          write(enable, valueOf(enable) >= 0.5 ? 0 : 1);
+          event.preventDefault();
+          return;
+        } else return;
+        write(frequency, quantiseParameter(frequency, denormalise(frequency.kind, frequencyPosition)));
+        if (gain) write(gain, quantiseParameter(gain, gainValue));
+        event.preventDefault();
+      });
+    });
+    scheduleResponsePaint();
+  }
+
   /* ------------------------------------------------------------ write path */
 
   function write(parameter, value) {
@@ -213,6 +571,7 @@
     state.values.set(parameter.index, value);
     state.queue.set(parameter.index, value);
     state.writtenAt.set(parameter.index, writeEpoch);
+    scheduleResponsePaint();
     if (!state.edited) {
       state.edited = true;
       idle();
@@ -622,6 +981,7 @@
       const widget = state.controls.get(entry.index);
       if (widget) widget.apply(entry.value);
     });
+    scheduleResponsePaint();
   }
 
   function scheduleRefresh(delay) {
@@ -658,7 +1018,18 @@
     [...state.schema.pages]
       .sort((left, right) => (left.order || 0) - (right.order || 0))
       .forEach((page) => panelElement.appendChild(groupCard(page)));
+    buildResponse();
     state.built = true;
+  }
+
+  if (typeof ResizeObserver === "function") {
+    new ResizeObserver(() => {
+      if (state.schema) buildResponse();
+    }).observe(responseElement);
+  } else {
+    window.addEventListener("resize", () => {
+      if (state.schema) buildResponse();
+    });
   }
 
   parent.postMessage({ protocol: PROTOCOL, kind: "ready" }, "*");

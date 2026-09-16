@@ -3,10 +3,10 @@ id = "org.rackforge.rf-eq"
 name = "RF-EQ"
 short_name = "RF-EQ"
 vendor = "RackForge Community"
-version = "0.1.0"
-description = "A five-band parametric equaliser: a high-pass, a low shelf, two peaks and a high shelf, with a trim and a bypass."
+version = "0.2.0"
+description = "An eight-band parametric equaliser with high-pass and low-pass filters, shelves, four fully parametric peaks, output trim and bypass."
 kind = "effect"
-state_version = 1
+state_version = 2
 capabilities = [
     "audio_input",
     "audio_output",

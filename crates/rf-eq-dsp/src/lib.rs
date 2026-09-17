@@ -1,4 +1,4 @@
-//! RF-EQ: a five-band parametric equaliser.
+//! RF-EQ: an eight-band parametric equaliser.
 //!
 //! * [`biquad`] holds the second-order section and the designs that fill it —
 //!   high-pass, low and high shelf, peak — from the Audio EQ Cookbook;

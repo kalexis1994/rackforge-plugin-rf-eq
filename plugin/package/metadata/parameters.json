@@ -72,7 +72,7 @@
         "unit": "Hz"
       },
       "name": "Low Freq",
-      "order": 2,
+      "order": 10,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -95,7 +95,7 @@
         "unit": "dB"
       },
       "name": "Low Gain",
-      "order": 3,
+      "order": 11,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -118,7 +118,7 @@
         "unit": "Hz"
       },
       "name": "Peak 1 Freq",
-      "order": 4,
+      "order": 20,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -141,7 +141,7 @@
         "unit": "dB"
       },
       "name": "Peak 1 Gain",
-      "order": 5,
+      "order": 21,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -163,7 +163,7 @@
         "type": "float"
       },
       "name": "Peak 1 Q",
-      "order": 6,
+      "order": 22,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -186,7 +186,7 @@
         "unit": "Hz"
       },
       "name": "Peak 2 Freq",
-      "order": 7,
+      "order": 30,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -209,7 +209,7 @@
         "unit": "dB"
       },
       "name": "Peak 2 Gain",
-      "order": 8,
+      "order": 31,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -231,7 +231,7 @@
         "type": "float"
       },
       "name": "Peak 2 Q",
-      "order": 9,
+      "order": 32,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -254,7 +254,7 @@
         "unit": "Hz"
       },
       "name": "High Freq",
-      "order": 10,
+      "order": 60,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -277,7 +277,7 @@
         "unit": "dB"
       },
       "name": "High Gain",
-      "order": 11,
+      "order": 61,
       "page": "filters",
       "suggested_control": "knob"
     },
@@ -321,6 +321,183 @@
       "order": 1,
       "page": "output",
       "suggested_control": "toggle"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak3.frequency",
+      "index": 14,
+      "kind": {
+        "default": 6000.0,
+        "maximum": 20000.0,
+        "minimum": 300.0,
+        "step": 1.0,
+        "taper": "logarithmic",
+        "type": "float",
+        "unit": "Hz"
+      },
+      "name": "Peak 3 Freq",
+      "order": 40,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak3.gain",
+      "index": 15,
+      "kind": {
+        "default": 0.0,
+        "maximum": 15.0,
+        "minimum": -15.0,
+        "step": 0.1,
+        "taper": "linear",
+        "type": "float",
+        "unit": "dB"
+      },
+      "name": "Peak 3 Gain",
+      "order": 41,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak3.q",
+      "index": 16,
+      "kind": {
+        "default": 1.0,
+        "maximum": 10.0,
+        "minimum": 0.3,
+        "step": 0.01,
+        "taper": "logarithmic",
+        "type": "float"
+      },
+      "name": "Peak 3 Q",
+      "order": 42,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak4.frequency",
+      "index": 17,
+      "kind": {
+        "default": 12000.0,
+        "maximum": 20000.0,
+        "minimum": 500.0,
+        "step": 1.0,
+        "taper": "logarithmic",
+        "type": "float",
+        "unit": "Hz"
+      },
+      "name": "Peak 4 Freq",
+      "order": 50,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak4.gain",
+      "index": 18,
+      "kind": {
+        "default": 0.0,
+        "maximum": 15.0,
+        "minimum": -15.0,
+        "step": 0.1,
+        "taper": "linear",
+        "type": "float",
+        "unit": "dB"
+      },
+      "name": "Peak 4 Gain",
+      "order": 51,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "peak4.q",
+      "index": 19,
+      "kind": {
+        "default": 1.0,
+        "maximum": 10.0,
+        "minimum": 0.3,
+        "step": 0.01,
+        "taper": "logarithmic",
+        "type": "float"
+      },
+      "name": "Peak 4 Q",
+      "order": 52,
+      "page": "filters",
+      "suggested_control": "knob"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": false,
+        "read_only": false
+      },
+      "id": "lpf.enable",
+      "index": 20,
+      "kind": {
+        "default": false,
+        "type": "boolean"
+      },
+      "name": "Low-pass",
+      "order": 70,
+      "page": "filters",
+      "suggested_control": "toggle"
+    },
+    {
+      "flags": {
+        "advanced": false,
+        "automatable": true,
+        "modulatable": true,
+        "read_only": false
+      },
+      "id": "lpf.frequency",
+      "index": 21,
+      "kind": {
+        "default": 20000.0,
+        "maximum": 20000.0,
+        "minimum": 500.0,
+        "step": 1.0,
+        "taper": "logarithmic",
+        "type": "float",
+        "unit": "Hz"
+      },
+      "name": "LPF Freq",
+      "order": 71,
+      "page": "filters",
+      "suggested_control": "knob"
     }
   ],
   "schema_version": 1

@@ -60,11 +60,31 @@
     {
       "bank": "factory",
       "category": "Setting",
-      "description": "Nothing below 300 Hz, twelve decibels less above three kilohertz: a narrow line.",
+      "description": "A steeply bounded 300 Hz to 3 kHz line for radios, intercoms and effects.",
       "editable": false,
       "id": "telephone",
       "name": "Telephone",
       "order": 5,
+      "tags": []
+    },
+    {
+      "bank": "factory",
+      "category": "Setting",
+      "description": "Clears subsonic energy and low-mid buildup while returning a little presence.",
+      "editable": false,
+      "id": "mix_cleanup",
+      "name": "Mix Cleanup",
+      "order": 6,
+      "tags": []
+    },
+    {
+      "bank": "factory",
+      "category": "Setting",
+      "description": "Broad, restrained moves for low-end weight, a calmer box region and open highs.",
+      "editable": false,
+      "id": "master_polish",
+      "name": "Master Polish",
+      "order": 7,
       "tags": []
     }
   ],

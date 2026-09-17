@@ -1,5 +1,6 @@
-//! The equaliser: a high-pass, a low shelf, two peaks and a high shelf in
-//! series, then a trim. One set of coefficients serves both channels.
+//! The equaliser: a high-pass, a low shelf, four peaks, a high shelf and a
+//! low-pass in series, then a trim. One set of coefficients serves both
+//! channels.
 //!
 //! A knob does not land where it is put; it travels there. Every setting
 //! has a target and a value on its way to it, moved by a one-pole ramp of a
@@ -52,12 +53,15 @@ const BUTTERWORTH_Q: f32 = core::f32::consts::FRAC_1_SQRT_2;
 /// monotonic, with the corner frequency halfway up the shelf.
 const SHELF_SLOPE: f32 = 1.0;
 
-const BAND_COUNT: usize = 5;
+const BAND_COUNT: usize = 8;
 const HPF: usize = 0;
 const LOW_SHELF: usize = 1;
 const PEAK1: usize = 2;
 const PEAK2: usize = 3;
-const HIGH_SHELF: usize = 4;
+const PEAK3: usize = 4;
+const PEAK4: usize = 5;
+const HIGH_SHELF: usize = 6;
+const LPF: usize = 7;
 
 /// A setting on its way to where it was put.
 #[derive(Clone, Copy, Default)]
@@ -95,6 +99,7 @@ pub struct Engine {
     /// between dry and filtered while it is switching, so the switch does
     /// not click.
     hpf_mix: f32,
+    lpf_mix: f32,
     output_gain: f32,
     bypass: bool,
 }
@@ -112,6 +117,7 @@ impl Default for Engine {
             active: [false; BAND_COUNT],
             sections: [[Biquad::default(); 2]; BAND_COUNT],
             hpf_mix: 0.0,
+            lpf_mix: 0.0,
             output_gain: 1.0,
             bypass: false,
         };
@@ -339,6 +345,30 @@ impl Engine {
             ),
         );
 
+        let peak3_gain = self.travelling(PEAK3_GAIN);
+        self.set_band(
+            PEAK3,
+            peak3_gain != 0.0,
+            Coefficients::peak(
+                self.frequency(PEAK3_FREQUENCY),
+                peak3_gain,
+                self.travelling(PEAK3_Q),
+                rate,
+            ),
+        );
+
+        let peak4_gain = self.travelling(PEAK4_GAIN);
+        self.set_band(
+            PEAK4,
+            peak4_gain != 0.0,
+            Coefficients::peak(
+                self.frequency(PEAK4_FREQUENCY),
+                peak4_gain,
+                self.travelling(PEAK4_Q),
+                rate,
+            ),
+        );
+
         let high_gain = self.travelling(HIGH_SHELF_GAIN);
         self.set_band(
             HIGH_SHELF,
@@ -349,6 +379,14 @@ impl Engine {
                 SHELF_SLOPE,
                 rate,
             ),
+        );
+
+        let mix = clamp(self.travelling(LPF_ENABLE), 0.0, 1.0);
+        self.lpf_mix = mix;
+        self.set_band(
+            LPF,
+            mix > 0.0,
+            Coefficients::low_pass(self.frequency(LPF_FREQUENCY), BUTTERWORTH_Q, rate),
         );
 
         self.output_gain = db_to_gain(self.travelling(OUTPUT));
@@ -390,6 +428,8 @@ impl Engine {
                 let filtered = section.process(coefficients, *sample);
                 *sample = if band == HPF && self.hpf_mix < 1.0 {
                     *sample + self.hpf_mix * (filtered - *sample)
+                } else if band == LPF && self.lpf_mix < 1.0 {
+                    *sample + self.lpf_mix * (filtered - *sample)
                 } else {
                     filtered
                 };
@@ -531,6 +571,31 @@ mod tests {
     }
 
     #[test]
+    fn the_two_added_peak_bands_shape_their_own_centres() {
+        let mut engine = prepared();
+        set(&mut engine, PEAK3_FREQUENCY, 6_000.0);
+        set(&mut engine, PEAK3_GAIN, 4.0);
+        set(&mut engine, PEAK3_Q, 1.5);
+        assert_near(
+            response_db(&mut engine, 6_000.0, 0.1),
+            4.0,
+            0.15,
+            "peak 3 centre",
+        );
+
+        let mut engine = prepared();
+        set(&mut engine, PEAK4_FREQUENCY, 12_000.0);
+        set(&mut engine, PEAK4_GAIN, -5.0);
+        set(&mut engine, PEAK4_Q, 2.0);
+        assert_near(
+            response_db(&mut engine, 12_000.0, 0.1),
+            -5.0,
+            0.2,
+            "peak 4 centre",
+        );
+    }
+
+    #[test]
     fn a_shelf_reaches_its_gain_two_octaves_in() {
         for gain in [6.0, -9.0] {
             let mut engine = prepared();
@@ -596,6 +661,31 @@ mod tests {
     }
 
     #[test]
+    fn the_low_pass_is_a_butterworth_at_twelve_decibels_an_octave() {
+        let mut engine = prepared();
+        set(&mut engine, LPF_FREQUENCY, 4_000.0);
+        assert_eq!(response_db(&mut engine, 16_000.0, 0.1), 0.0);
+        set(&mut engine, LPF_ENABLE, 1.0);
+        assert_near(
+            response_db(&mut engine, 4_000.0, 0.1),
+            -3.0,
+            0.3,
+            "low-pass at its cutoff",
+        );
+        let octave_above = response_db(&mut engine, 8_000.0, 0.1);
+        assert!(
+            (-14.0..=-11.0).contains(&octave_above),
+            "an octave above the cutoff read {octave_above} dB"
+        );
+        assert_near(
+            response_db(&mut engine, 250.0, 0.1),
+            0.0,
+            0.1,
+            "low-pass four octaves down",
+        );
+    }
+
+    #[test]
     fn the_trim_is_a_gain() {
         let mut engine = prepared();
         set(&mut engine, OUTPUT, 6.0);
@@ -653,7 +743,13 @@ mod tests {
         set(&mut engine, PEAK1_Q, 10.0);
         set(&mut engine, PEAK2_GAIN, 15.0);
         set(&mut engine, PEAK2_Q, 0.3);
+        set(&mut engine, PEAK3_GAIN, -15.0);
+        set(&mut engine, PEAK3_Q, 10.0);
+        set(&mut engine, PEAK4_GAIN, 15.0);
+        set(&mut engine, PEAK4_Q, 0.3);
         set(&mut engine, HIGH_SHELF_GAIN, -15.0);
+        set(&mut engine, LPF_ENABLE, 1.0);
+        set(&mut engine, LPF_FREQUENCY, 18_000.0);
         set(&mut engine, OUTPUT, 24.0);
         // A burst first, so there is a tail to decay.
         for n in 0..(RATE as usize / 10) {
@@ -739,6 +835,24 @@ mod tests {
         assert_eq!(other.parameter(HPF_ENABLE), Some(1.0));
         assert!(!other.load_state(&block[..7]));
         assert!(!other.load_state(&block[..8]));
+    }
+
+    #[test]
+    fn version_one_state_loads_with_new_bands_at_their_defaults() {
+        let mut original = prepared();
+        set(&mut original, PEAK1_GAIN, 3.0);
+        let mut block = [0_u8; STATE_BYTES];
+        original.save_state(&mut block).unwrap();
+
+        let mut migrated = prepared();
+        assert!(migrated.load_state(&block[..14 * 4]));
+        assert_eq!(migrated.parameter(PEAK1_GAIN), Some(3.0));
+        assert_eq!(migrated.parameter(PEAK3_GAIN), Some(0.0));
+        assert_eq!(migrated.parameter(PEAK3_FREQUENCY), Some(6_000.0));
+        assert_eq!(migrated.parameter(PEAK4_GAIN), Some(0.0));
+        assert_eq!(migrated.parameter(PEAK4_FREQUENCY), Some(12_000.0));
+        assert_eq!(migrated.parameter(LPF_ENABLE), Some(0.0));
+        assert_eq!(migrated.parameter(LPF_FREQUENCY), Some(20_000.0));
     }
 
     #[test]

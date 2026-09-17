@@ -14,7 +14,7 @@ pub struct Preset {
     pub values: &'static [(u32, f32)],
 }
 
-pub const PRESET_COUNT: usize = 6;
+pub const PRESET_COUNT: usize = 8;
 
 pub const PRESETS: [Preset; PRESET_COUNT] = [
     Preset {
@@ -64,12 +64,47 @@ pub const PRESETS: [Preset; PRESET_COUNT] = [
     Preset {
         id: "telephone",
         name: "Telephone",
-        description: "Nothing below 300 Hz, twelve decibels less above three kilohertz: a narrow line.",
+        description: "A steeply bounded 300 Hz to 3 kHz line for radios, intercoms and effects.",
         values: &[
             (HPF_ENABLE, 1.0),
             (HPF_FREQUENCY, 300.0),
-            (HIGH_SHELF_FREQUENCY, 3_000.0),
-            (HIGH_SHELF_GAIN, -12.0),
+            (LPF_ENABLE, 1.0),
+            (LPF_FREQUENCY, 3_000.0),
+        ],
+    },
+    Preset {
+        id: "mix_cleanup",
+        name: "Mix Cleanup",
+        description: "Clears subsonic energy and low-mid buildup while returning a little presence.",
+        values: &[
+            (HPF_ENABLE, 1.0),
+            (HPF_FREQUENCY, 30.0),
+            (LOW_SHELF_FREQUENCY, 100.0),
+            (LOW_SHELF_GAIN, -1.0),
+            (PEAK1_FREQUENCY, 250.0),
+            (PEAK1_GAIN, -2.5),
+            (PEAK1_Q, 1.0),
+            (PEAK3_FREQUENCY, 4_500.0),
+            (PEAK3_GAIN, 1.5),
+            (PEAK3_Q, 0.8),
+        ],
+    },
+    Preset {
+        id: "master_polish",
+        name: "Master Polish",
+        description: "Broad, restrained moves for low-end weight, a calmer box region and open highs.",
+        values: &[
+            (LOW_SHELF_FREQUENCY, 90.0),
+            (LOW_SHELF_GAIN, 0.8),
+            (PEAK2_FREQUENCY, 420.0),
+            (PEAK2_GAIN, -1.2),
+            (PEAK2_Q, 1.1),
+            (PEAK3_FREQUENCY, 4_000.0),
+            (PEAK3_GAIN, 0.8),
+            (PEAK3_Q, 0.7),
+            (HIGH_SHELF_FREQUENCY, 10_000.0),
+            (HIGH_SHELF_GAIN, 1.2),
+            (OUTPUT, -0.5),
         ],
     },
 ];
